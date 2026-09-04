@@ -122,8 +122,16 @@
 
   <div class="card">
     <h2>Reset</h2>
-    <div class="muted">Hapus tim &amp; bracket yang udah dibikin (daftar pemain gak kehapus).</div>
-    <button class="btn ghost" id="resetBracketBtn">Reset Tim &amp; Bracket</button>
+    <div class="row-actions">
+      <div>
+        <div class="muted" style="margin-bottom:8px;">Kosongin semua skor, tim yang udah di-acak tetap sama.</div>
+        <button class="btn ghost" id="resetScoresBtn">Reset Skor (Tim Tetap)</button>
+      </div>
+      <div>
+        <div class="muted" style="margin-bottom:8px;">Hapus tim &amp; bracket sepenuhnya (daftar pemain gak kehapus).</div>
+        <button class="btn ghost" id="resetBracketBtn">Reset Tim &amp; Bracket</button>
+      </div>
+    </div>
   </div>
 
 </main>
@@ -245,26 +253,7 @@ function seedOrder(n){
   return result;
 }
 
-async function shuffleTeamsAndBuildBracket(){
-  const names = state.roster.map(n=>n.trim()).filter(Boolean);
-  if(names.length < 4){ alert('Minimal 4 pemain (2 tim) buat bikin bracket.'); return; }
-  if(state.bracket.length > 0){
-    if(!confirm('Ini bakal bikin ulang tim & bracket dari awal, skor yang udah diisi bakal hilang. Lanjut?')) return;
-  }
-
-  const shuffled = shuffleArr(names);
-  let leftover = null;
-  let pairPool = shuffled;
-  if(pairPool.length % 2 !== 0){
-    leftover = pairPool[pairPool.length-1];
-    pairPool = pairPool.slice(0, -1);
-  }
-
-  const teams = [];
-  for(let i=0;i<pairPool.length;i+=2){
-    teams.push({ id: uid(), p1: pairPool[i], p2: pairPool[i+1] });
-  }
-
+function buildBracketFromTeams(teams){
   const N = teams.length;
   const bracketSize = nextPow2(N);
   const order = seedOrder(bracketSize);
@@ -285,6 +274,30 @@ async function shuffleTeamsAndBuildBracket(){
     rounds.push(r);
   }
   propagateWinners(rounds);
+  return rounds;
+}
+
+async function shuffleTeamsAndBuildBracket(){
+  const names = state.roster.map(n=>n.trim()).filter(Boolean);
+  if(names.length < 4){ alert('Minimal 4 pemain (2 tim) buat bikin bracket.'); return; }
+  if(state.bracket.length > 0){
+    if(!confirm('Ini bakal bikin ulang tim & bracket dari awal, skor yang udah diisi bakal hilang. Lanjut?')) return;
+  }
+
+  const shuffled = shuffleArr(names);
+  let leftover = null;
+  let pairPool = shuffled;
+  if(pairPool.length % 2 !== 0){
+    leftover = pairPool[pairPool.length-1];
+    pairPool = pairPool.slice(0, -1);
+  }
+
+  const teams = [];
+  for(let i=0;i<pairPool.length;i+=2){
+    teams.push({ id: uid(), p1: pairPool[i], p2: pairPool[i+1] });
+  }
+
+  const rounds = buildBracketFromTeams(teams);
 
   state.teams = teams;
   state.leftover = leftover;
@@ -296,18 +309,17 @@ async function shuffleTeamsAndBuildBracket(){
 }
 
 function propagateWinners(rounds){
+  // Isi slot ronde berikutnya dari pemenang ronde sekarang.
+  // PENTING: bye cuma boleh terjadi di Babak ke-1 (sudah ditentukan waktu
+  // bracket dibikin di buildBracketFromTeams). Mulai ronde ke-2 dst,
+  // sebuah match TIDAK PERNAH otomatis "menang bye" hanya karena lawannya
+  // belum ketauan -- dia nunggu sampai match sebelahnya beneran selesai
+  // dimainkan, baru dua pemenang itu ketemu.
   for(let r=0;r<rounds.length-1;r++){
     rounds[r].forEach((m, idx)=>{
       if(m.winnerId){
         const nextMatch = rounds[r+1][Math.floor(idx/2)];
         if(idx % 2 === 0) nextMatch.aId = m.winnerId; else nextMatch.bId = m.winnerId;
-      }
-    });
-  }
-  for(let r=0;r<rounds.length;r++){
-    rounds[r].forEach(m=>{
-      if(!m.played && (!m.aId || !m.bId) && (m.aId || m.bId)){
-        m.bye = true; m.played = true; m.winnerId = m.aId || m.bId;
       }
     });
   }
@@ -339,6 +351,15 @@ async function resetBracket(){
   await fbSet('teams', []);
   await fbSet('leftover', null);
   await fbSet('bracket', []);
+  renderAll();
+}
+
+async function resetScoresOnly(){
+  if(state.teams.length === 0){ alert('Belum ada tim yang dibikin.'); return; }
+  if(!confirm('Ini bakal ngosongin semua skor & hasil match, tapi tim tetap sama kayak sekarang. Lanjut?')) return;
+  const rounds = buildBracketFromTeams(state.teams);
+  state.bracket = rounds;
+  await fbSet('bracket', rounds);
   renderAll();
 }
 
@@ -406,9 +427,9 @@ function renderBracket(){
       }
       if(!m.aId || !m.bId){
         return `<div class="bmatch">
-          <div class="team-line">${escapeHtml(teamLabel(m.aId))}</div>
+          <div class="team-line">${m.aId ? escapeHtml(teamLabel(m.aId)) : '<em style="color:var(--ink-soft);">Menunggu pemenang</em>'}</div>
           <div class="divider"></div>
-          <div class="team-line">${escapeHtml(teamLabel(m.bId))}</div>
+          <div class="team-line">${m.bId ? escapeHtml(teamLabel(m.bId)) : '<em style="color:var(--ink-soft);">Menunggu pemenang</em>'}</div>
         </div>`;
       }
       if(!m.played){
@@ -513,6 +534,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   document.getElementById('saveRosterBtn').addEventListener('click', saveRoster);
   document.getElementById('shuffleBtn').addEventListener('click', shuffleTeamsAndBuildBracket);
   document.getElementById('resetBracketBtn').addEventListener('click', resetBracket);
+  document.getElementById('resetScoresBtn').addEventListener('click', resetScoresOnly);
 
   document.addEventListener('click', async (e)=>{
     const saveScore = e.target.closest('[data-action="save-score"]');
