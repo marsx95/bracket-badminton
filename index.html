@@ -149,7 +149,7 @@ const firebaseConfig = {
 let db = null;
 let firebaseReady = false;
 try{
-  if(firebaseConfig.apiKey !== "AIzaSyD2GXXXUXFK7DOR8nFIVCtO0vTtGw25QOc"){
+  if(firebaseConfig.apiKey && firebaseConfig.apiKey.startsWith("AIza")){
     firebase.initializeApp(firebaseConfig);
     db = firebase.database();
     firebaseReady = true;
