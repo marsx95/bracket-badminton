@@ -120,7 +120,7 @@
 
   <div id="bracketContainer"></div>
 
-  <div class="card">
+  <div class="card" style="display: none;">
     <h2>Reset</h2>
     <div class="muted">Hapus tim &amp; bracket yang udah dibikin (daftar pemain gak kehapus).</div>
     <button class="btn ghost" id="resetBracketBtn">Reset Tim &amp; Bracket</button>
@@ -429,7 +429,7 @@ function renderBracket(){
   }).join('');
 
   const editSection = `
-    <div class="card">
+    <div class="card" style="display: none;">
       <h2>Perbaiki Nama Tim</h2>
       <div class="muted">Salah tulis nama pas di-acak? Perbaiki di sini tanpa perlu acak ulang semua tim.</div>
       ${state.teams.map(t=>`
