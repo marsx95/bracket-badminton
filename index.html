@@ -130,7 +130,7 @@
     <div class="card">
       <h2>Acak Jadi Tim Putra</h2>
       <div class="muted">Ambil semua nama di daftar pemain putra, acak, pasangkan 2-2 jadi tim, terus langsung susun bracket sistem gugur.</div>
-      <button class="btn gold" id="shuffleBtn-putra">🎲 Acak Jadi Tim &amp; Buat Bracket</button>
+      <button class="btn gold" id="shuffleBtn-putra" style="display:none;">🎲 Acak Jadi Tim &amp; Buat Bracket</button>
       <div id="teamsResult-putra"></div>
     </div>
 
@@ -145,7 +145,7 @@
         </div>
         <div>
           <div class="muted" style="margin-bottom:8px;">Hapus tim &amp; bracket sepenuhnya (daftar pemain gak kehapus).</div>
-          <button class="btn ghost" id="resetBracketBtn-putra">Reset Tim &amp; Bracket</button>
+          <button class="btn ghost" id="resetBracketBtn-putra" style="display:none;">Reset Tim &amp; Bracket</button>
         </div>
       </div>
     </div>
@@ -166,7 +166,7 @@
     <div class="card">
       <h2>Acak Jadi Tim Putri</h2>
       <div class="muted">Ambil semua nama di daftar pemain putri, acak, pasangkan 2-2 jadi tim, terus langsung susun bracket sistem gugur.</div>
-      <button class="btn gold" id="shuffleBtn-putri">🎲 Acak Jadi Tim &amp; Buat Bracket</button>
+      <button class="btn gold" id="shuffleBtn-putri" style="display:none;">🎲 Acak Jadi Tim &amp; Buat Bracket</button>
       <div id="teamsResult-putri"></div>
     </div>
 
@@ -181,7 +181,7 @@
         </div>
         <div>
           <div class="muted" style="margin-bottom:8px;">Hapus tim &amp; bracket sepenuhnya (daftar pemain gak kehapus).</div>
-          <button class="btn ghost" id="resetBracketBtn-putri">Reset Tim &amp; Bracket</button>
+          <button class="btn ghost" id="resetBracketBtn-putri" style="display:none;">Reset Tim &amp; Bracket</button>
         </div>
       </div>
     </div>
@@ -522,7 +522,7 @@ function renderBracket(cat){
   }).join('');
 
   const editSection = `
-    <div class="card">
+    <div class="card" style="display:none;">
       <h2>Perbaiki Nama Tim</h2>
       <div class="muted">Salah tulis nama pas di-acak? Perbaiki di sini tanpa perlu acak ulang semua tim.</div>
       ${state[cat].teams.map(t=>`
