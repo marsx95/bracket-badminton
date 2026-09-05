@@ -39,7 +39,17 @@
   .conn-dot{width:8px;height:8px;border-radius:50%;background:#ccc;}
   .conn-dot.on{background:#4ADE80;}
   .conn-dot.off{background:#F87171;}
+
+  .cat-nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;}
+  .cat-tab-btn{
+    font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;
+    padding:9px 18px;border-radius:999px;border:2px solid rgba(255,255,255,0.35);
+    background:rgba(255,255,255,0.08);color:#fff;cursor:pointer;
+  }
+  .cat-tab-btn.active{background:#fff;border-color:#fff;color:var(--red-dark);}
+
   main{padding-top:24px;}
+  .cat-panel{}
   .card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:20px;}
   .card h2{font-family:'Archivo Black', sans-serif;font-size:19px;text-transform:uppercase;margin:0 0 6px;color:var(--red-dark);}
   .muted{color:var(--ink-soft);font-size:13.5px;margin-bottom:14px;}
@@ -90,8 +100,12 @@
   <div class="wrap">
     <div class="eyebrow">Lomba Susulan — 7 September</div>
     <h1>Bracket Bulu Tangkis Ganda</h1>
-    <p>Edit daftar pemain kapan aja, klik acak buat bikin tim &amp; bracket otomatis, lalu isi skor tiap match sampai ketemu juaranya. Semua panitia lihat data yang sama secara real-time.</p>
+    <p>Bracket Putra dan Putri dipisah sepenuhnya — daftar pemain, tim, dan hasil masing-masing independen. Semua panitia lihat data yang sama secara real-time.</p>
     <div class="conn-badge"><span class="conn-dot" id="connDot"></span><span id="connText">Menghubungkan...</span></div>
+    <div class="cat-nav">
+      <button class="cat-tab-btn active" data-cat="putra">🏸 Bracket Putra</button>
+      <button class="cat-tab-btn" data-cat="putri">🏸 Bracket Putri</button>
+    </div>
   </div>
 </div>
 
@@ -101,38 +115,77 @@
     ⚠️ Firebase belum di-setup. Isi <code>firebaseConfig</code> di dalam kode (cari komentar <code>GANTI DENGAN CONFIG FIREBASE KAMU</code>) dengan config dari project Firebase kamu sendiri, baru data bisa kesimpan &amp; ke-share ke semua panitia.
   </div>
 
-  <div class="card">
-    <h2>Daftar Pemain</h2>
-    <div class="muted">Satu nama per baris. Tambah, hapus, atau perbaiki nama di sini, lalu klik "Simpan Daftar" — perubahan gak akan ngacak ulang tim yang udah dibikin.</div>
-    <textarea id="rosterInput"></textarea>
-    <div class="row-actions">
-      <button class="btn ghost" id="saveRosterBtn">Simpan Daftar</button>
-      <span class="status-line" id="rosterStatus"></span>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>Acak Jadi Tim</h2>
-    <div class="muted">Ambil semua nama di daftar pemain, acak, pasangkan 2-2 jadi tim, terus langsung susun bracket sistem gugur.</div>
-    <button class="btn gold" id="shuffleBtn" style="display: none;">🎲 Acak Jadi Tim &amp; Buat Bracket</button>
-    <div id="teamsResult"></div>
-  </div>
-
-  <div id="bracketContainer"></div>
-
-  <div class="card">
-    <h2>Reset</h2>
-    <div class="row-actions">
-      <div>
-        <div class="muted" style="margin-bottom:8px;">Kosongin semua skor, tim yang udah di-acak tetap sama.</div>
-        <button class="btn ghost" id="resetScoresBtn">Reset Skor (Tim Tetap)</button>
-      </div>
-      <div>
-        <div class="muted" style="margin-bottom:8px;" style="display: none;">Hapus tim &amp; bracket sepenuhnya (daftar pemain gak kehapus).</div>
-        <button class="btn ghost" id="resetBracketBtn" style="display: none;">Reset Tim &amp; Bracket</button>
+  <!-- ===================== PANEL PUTRA ===================== -->
+  <section class="cat-panel" id="panel-putra">
+    <div class="card">
+      <h2>Daftar Pemain Putra</h2>
+      <div class="muted">Satu nama per baris. Tambah, hapus, atau perbaiki nama di sini, lalu klik "Simpan Daftar" — perubahan gak akan ngacak ulang tim yang udah dibikin.</div>
+      <textarea id="rosterInput-putra"></textarea>
+      <div class="row-actions">
+        <button class="btn ghost" id="saveRosterBtn-putra">Simpan Daftar</button>
+        <span class="status-line" id="rosterStatus-putra"></span>
       </div>
     </div>
-  </div>
+
+    <div class="card">
+      <h2>Acak Jadi Tim Putra</h2>
+      <div class="muted">Ambil semua nama di daftar pemain putra, acak, pasangkan 2-2 jadi tim, terus langsung susun bracket sistem gugur.</div>
+      <button class="btn gold" id="shuffleBtn-putra">🎲 Acak Jadi Tim &amp; Buat Bracket</button>
+      <div id="teamsResult-putra"></div>
+    </div>
+
+    <div id="bracketContainer-putra"></div>
+
+    <div class="card">
+      <h2>Reset Putra</h2>
+      <div class="row-actions">
+        <div>
+          <div class="muted" style="margin-bottom:8px;">Kosongin semua skor, tim yang udah di-acak tetap sama.</div>
+          <button class="btn ghost" id="resetScoresBtn-putra">Reset Skor (Tim Tetap)</button>
+        </div>
+        <div>
+          <div class="muted" style="margin-bottom:8px;">Hapus tim &amp; bracket sepenuhnya (daftar pemain gak kehapus).</div>
+          <button class="btn ghost" id="resetBracketBtn-putra">Reset Tim &amp; Bracket</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PANEL PUTRI ===================== -->
+  <section class="cat-panel" id="panel-putri" style="display:none;">
+    <div class="card">
+      <h2>Daftar Pemain Putri</h2>
+      <div class="muted">Satu nama per baris. Tambah, hapus, atau perbaiki nama di sini, lalu klik "Simpan Daftar" — perubahan gak akan ngacak ulang tim yang udah dibikin.</div>
+      <textarea id="rosterInput-putri"></textarea>
+      <div class="row-actions">
+        <button class="btn ghost" id="saveRosterBtn-putri">Simpan Daftar</button>
+        <span class="status-line" id="rosterStatus-putri"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Acak Jadi Tim Putri</h2>
+      <div class="muted">Ambil semua nama di daftar pemain putri, acak, pasangkan 2-2 jadi tim, terus langsung susun bracket sistem gugur.</div>
+      <button class="btn gold" id="shuffleBtn-putri">🎲 Acak Jadi Tim &amp; Buat Bracket</button>
+      <div id="teamsResult-putri"></div>
+    </div>
+
+    <div id="bracketContainer-putri"></div>
+
+    <div class="card">
+      <h2>Reset Putri</h2>
+      <div class="row-actions">
+        <div>
+          <div class="muted" style="margin-bottom:8px;">Kosongin semua skor, tim yang udah di-acak tetap sama.</div>
+          <button class="btn ghost" id="resetScoresBtn-putri">Reset Skor (Tim Tetap)</button>
+        </div>
+        <div>
+          <div class="muted" style="margin-bottom:8px;">Hapus tim &amp; bracket sepenuhnya (daftar pemain gak kehapus).</div>
+          <button class="btn ghost" id="resetBracketBtn-putri">Reset Tim &amp; Bracket</button>
+        </div>
+      </div>
+    </div>
+  </section>
 
 </main>
 
@@ -165,18 +218,27 @@ try{
 }catch(e){ console.error('Firebase init gagal', e); }
 
 /* ============================================================
-   DEFAULT ROSTER (dari daftar yang dikasih)
+   DEFAULT ROSTERS — Putra & Putri terpisah
 ============================================================ */
-const DEFAULT_ROSTER = [
-  "Wahyu Saputra","Michael Valentino","Sukarno Alatas","Ainur","Ignatius Wahyu",
-  "YOGI MAKMUR SAPUTRA BINTANG","Kevin Yudha Pratama","Amarsjah","Carina",
-  "Andy Habibie Razak","Liza Camelia Suryanata","Muhammad Ripal","Izha Noer Aradha",
-  "Daniel","Nanda Kumala Sari","BUDY","Arif Wijaya","Rizkyani Utami","Rizki Saputra",
-  "Yosep belfridus delang","Kevin Yudha Pratama","Anisa","Nanda Kumala Sari","Affana",
-  "Audi","Akbar","Muhammad Sofwan Hidayah","Iman"
-];
+const DEFAULT_ROSTERS = {
+  putra: [
+    "Wahyu Saputra","Michael Valentino","Sukarno Alatas","Ignatius Wahyu",
+    "YOGI MAKMUR SAPUTRA BINTANG","Kevin Yudha Pratama","Amarsjah","Andy Habibie Razak",
+    "Muhammad Ripal","Izha Noer Aradha","Daniel","BUDY","Arif Wijaya","Rizki Saputra",
+    "Yosep belfridus delang","Audi","Akbar","Muhammad Sofwan Hidayah","Iman",
+    "Riyanto Maulana","Iqbal","Mr Shin","Piet"
+  ],
+  putri: [
+    "Ainur","Carina","Liza Camelia Suryanata","Rizkyani Utami","Anisa",
+    "Nanda Kumala Sari","Affana","Indah Lestari","Sarah","Rani","Safitri","Rachmi"
+  ]
+};
+const CATEGORIES = ['putra','putri'];
 
-let state = { roster: DEFAULT_ROSTER.slice(), teams: [], leftover: null, bracket: [] };
+let state = {
+  putra: { roster: DEFAULT_ROSTERS.putra.slice(), teams: [], leftover: null, bracket: [] },
+  putri: { roster: DEFAULT_ROSTERS.putri.slice(), teams: [], leftover: null, bracket: [] }
+};
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
@@ -198,23 +260,33 @@ async function fbSet(path, value){
 }
 
 /* ============================================================
-   ROSTER
+   TABS
 ============================================================ */
-function renderRoster(){
-  const el = document.getElementById('rosterInput');
-  if(document.activeElement === el) return; // jangan timpa yang lagi diketik
-  el.value = state.roster.join('\n');
-  checkDuplicates();
+function switchCatTab(cat){
+  document.querySelectorAll('.cat-tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.cat===cat));
+  CATEGORIES.forEach(c=>{
+    document.getElementById('panel-'+c).style.display = (c===cat) ? 'block' : 'none';
+  });
 }
 
-function checkDuplicates(){
-  const names = state.roster.map(n=>n.trim()).filter(Boolean);
+/* ============================================================
+   ROSTER
+============================================================ */
+function renderRoster(cat){
+  const el = document.getElementById('rosterInput-'+cat);
+  if(document.activeElement === el) return; // jangan timpa yang lagi diketik
+  el.value = state[cat].roster.join('\n');
+  checkDuplicates(cat);
+}
+
+function checkDuplicates(cat){
+  const names = state[cat].roster.map(n=>n.trim()).filter(Boolean);
   const seen = {}, dupes = new Set();
   names.forEach(n=>{
     const key = n.toLowerCase();
     if(seen[key]) dupes.add(n); else seen[key]=true;
   });
-  const statusEl = document.getElementById('rosterStatus');
+  const statusEl = document.getElementById('rosterStatus-'+cat);
   if(dupes.size > 0){
     statusEl.className = 'status-line warn';
     statusEl.textContent = `${names.length} nama tersimpan. ⚠️ Nama ganda: ${[...dupes].join(', ')} — cek dulu apa itu 2 orang beda atau kepencet dobel.`;
@@ -224,11 +296,11 @@ function checkDuplicates(){
   }
 }
 
-async function saveRoster(){
-  const lines = document.getElementById('rosterInput').value.split('\n').map(s=>s.trim()).filter(Boolean);
-  state.roster = lines;
-  await fbSet('roster', lines);
-  checkDuplicates();
+async function saveRoster(cat){
+  const lines = document.getElementById('rosterInput-'+cat).value.split('\n').map(s=>s.trim()).filter(Boolean);
+  state[cat].roster = lines;
+  await fbSet(cat+'/roster', lines);
+  checkDuplicates(cat);
 }
 
 /* ============================================================
@@ -277,10 +349,10 @@ function buildBracketFromTeams(teams){
   return rounds;
 }
 
-async function shuffleTeamsAndBuildBracket(){
-  const names = state.roster.map(n=>n.trim()).filter(Boolean);
+async function shuffleTeamsAndBuildBracket(cat){
+  const names = state[cat].roster.map(n=>n.trim()).filter(Boolean);
   if(names.length < 4){ alert('Minimal 4 pemain (2 tim) buat bikin bracket.'); return; }
-  if(state.bracket.length > 0){
+  if(state[cat].bracket.length > 0){
     if(!confirm('Ini bakal bikin ulang tim & bracket dari awal, skor yang udah diisi bakal hilang. Lanjut?')) return;
   }
 
@@ -299,13 +371,13 @@ async function shuffleTeamsAndBuildBracket(){
 
   const rounds = buildBracketFromTeams(teams);
 
-  state.teams = teams;
-  state.leftover = leftover;
-  state.bracket = rounds;
-  await fbSet('teams', teams);
-  await fbSet('leftover', leftover);
-  await fbSet('bracket', rounds);
-  renderAll();
+  state[cat].teams = teams;
+  state[cat].leftover = leftover;
+  state[cat].bracket = rounds;
+  await fbSet(cat+'/teams', teams);
+  await fbSet(cat+'/leftover', leftover);
+  await fbSet(cat+'/bracket', rounds);
+  renderAll(cat);
 }
 
 function propagateWinners(rounds){
@@ -325,65 +397,65 @@ function propagateWinners(rounds){
   }
 }
 
-async function saveMatchScore(roundIdx, matchId, scoreA, scoreB){
+async function saveMatchScore(cat, roundIdx, matchId, scoreA, scoreB){
   if(scoreA === scoreB){ alert('Skor gak boleh seri, harus ada pemenang.'); return; }
-  const rounds = state.bracket;
+  const rounds = state[cat].bracket;
   const match = rounds[roundIdx].find(m=>m.id===matchId);
   match.scoreA = scoreA; match.scoreB = scoreB; match.played = true;
   match.winnerId = scoreA > scoreB ? match.aId : match.bId;
   propagateWinners(rounds);
-  await fbSet('bracket', rounds);
-  renderAll();
+  await fbSet(cat+'/bracket', rounds);
+  renderAll(cat);
 }
 
-async function renameTeam(teamId, p1, p2){
-  const t = state.teams.find(x=>x.id===teamId);
+async function renameTeam(cat, teamId, p1, p2){
+  const t = state[cat].teams.find(x=>x.id===teamId);
   if(!t) return;
   t.p1 = p1.trim() || t.p1;
   t.p2 = p2.trim() || t.p2;
-  await fbSet('teams', state.teams);
-  renderAll();
+  await fbSet(cat+'/teams', state[cat].teams);
+  renderAll(cat);
 }
 
-async function resetBracket(){
+async function resetBracket(cat){
   if(!confirm('Hapus semua tim & bracket? Daftar pemain gak akan kehapus.')) return;
-  state.teams = []; state.leftover = null; state.bracket = [];
-  await fbSet('teams', []);
-  await fbSet('leftover', null);
-  await fbSet('bracket', []);
-  renderAll();
+  state[cat].teams = []; state[cat].leftover = null; state[cat].bracket = [];
+  await fbSet(cat+'/teams', []);
+  await fbSet(cat+'/leftover', null);
+  await fbSet(cat+'/bracket', []);
+  renderAll(cat);
 }
 
-async function resetScoresOnly(){
-  if(state.teams.length === 0){ alert('Belum ada tim yang dibikin.'); return; }
+async function resetScoresOnly(cat){
+  if(state[cat].teams.length === 0){ alert('Belum ada tim yang dibikin.'); return; }
   if(!confirm('Ini bakal ngosongin semua skor & hasil match, tapi tim tetap sama kayak sekarang. Lanjut?')) return;
-  const rounds = buildBracketFromTeams(state.teams);
-  state.bracket = rounds;
-  await fbSet('bracket', rounds);
-  renderAll();
+  const rounds = buildBracketFromTeams(state[cat].teams);
+  state[cat].bracket = rounds;
+  await fbSet(cat+'/bracket', rounds);
+  renderAll(cat);
 }
 
 /* ============================================================
    RENDER
 ============================================================ */
-function teamById(id){ return state.teams.find(t=>t.id===id); }
-function teamLabel(id){
+function teamById(cat, id){ return state[cat].teams.find(t=>t.id===id); }
+function teamLabel(cat, id){
   if(!id) return 'BYE';
-  const t = teamById(id);
+  const t = teamById(cat, id);
   return t ? (t.p1 + ' & ' + t.p2) : '(tim dihapus)';
 }
 function escapeHtml(str){
   return String(str ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-function renderTeamsResult(){
-  const el = document.getElementById('teamsResult');
-  if(state.teams.length === 0){ el.innerHTML=''; return; }
-  let html = '<div class="team-grid">' + state.teams.map((t,i)=>`
+function renderTeamsResult(cat){
+  const el = document.getElementById('teamsResult-'+cat);
+  if(state[cat].teams.length === 0){ el.innerHTML=''; return; }
+  let html = '<div class="team-grid">' + state[cat].teams.map((t,i)=>`
     <div class="team-chip"><b>Tim ${i+1}:</b> ${escapeHtml(t.p1)} &amp; ${escapeHtml(t.p2)}</div>
   `).join('') + '</div>';
-  if(state.leftover){
-    html += `<div class="leftover">⚠️ Jumlah pemain ganjil — <b>${escapeHtml(state.leftover)}</b> belum kebagian pasangan. Tambah 1 nama lagi terus acak ulang, atau pasangkan manual.</div>`;
+  if(state[cat].leftover){
+    html += `<div class="leftover">⚠️ Jumlah pemain ganjil — <b>${escapeHtml(state[cat].leftover)}</b> belum kebagian pasangan. Tambah 1 nama lagi terus acak ulang, atau pasangkan manual.</div>`;
   }
   el.innerHTML = html;
 }
@@ -396,21 +468,21 @@ function roundLabel(idx, total){
   return 'Babak ke-'+(idx+1);
 }
 
-function renderBracket(){
-  const container = document.getElementById('bracketContainer');
-  if(state.bracket.length === 0){
+function renderBracket(cat){
+  const container = document.getElementById('bracketContainer-'+cat);
+  if(state[cat].bracket.length === 0){
     container.innerHTML = `<div class="card"><div class="empty-state">Bracket belum dibuat. Isi daftar pemain di atas, terus klik "Acak Jadi Tim & Buat Bracket".</div></div>`;
     return;
   }
-  const rounds = state.bracket;
+  const rounds = state[cat].bracket;
   const finalMatch = rounds[rounds.length-1][0];
   let championHtml = '';
   if(finalMatch.played && finalMatch.winnerId){
     championHtml = `
       <div class="champion-banner">
         <div class="cup">🏆</div>
-        <h2>${escapeHtml(teamLabel(finalMatch.winnerId))}</h2>
-        <div>Juara Bulu Tangkis Ganda!</div>
+        <h2>${escapeHtml(teamLabel(cat, finalMatch.winnerId))}</h2>
+        <div>Juara Bulu Tangkis Ganda ${cat === 'putra' ? 'Putra' : 'Putri'}!</div>
       </div>`;
   }
 
@@ -420,45 +492,45 @@ function renderBracket(){
       const bWin = m.winnerId && m.winnerId===m.bId;
       if(m.bye){
         return `<div class="bmatch">
-          <div class="team-line winner">${escapeHtml(teamLabel(m.winnerId))}</div>
+          <div class="team-line winner">${escapeHtml(teamLabel(cat, m.winnerId))}</div>
           <div class="divider"></div>
           <div class="team-line bye">— bye —</div>
         </div>`;
       }
       if(!m.aId || !m.bId){
         return `<div class="bmatch">
-          <div class="team-line">${m.aId ? escapeHtml(teamLabel(m.aId)) : '<em style="color:var(--ink-soft);">Menunggu pemenang</em>'}</div>
+          <div class="team-line">${m.aId ? escapeHtml(teamLabel(cat, m.aId)) : '<em style="color:var(--ink-soft);">Menunggu pemenang</em>'}</div>
           <div class="divider"></div>
-          <div class="team-line">${m.bId ? escapeHtml(teamLabel(m.bId)) : '<em style="color:var(--ink-soft);">Menunggu pemenang</em>'}</div>
+          <div class="team-line">${m.bId ? escapeHtml(teamLabel(cat, m.bId)) : '<em style="color:var(--ink-soft);">Menunggu pemenang</em>'}</div>
         </div>`;
       }
       if(!m.played){
         return `<div class="bmatch">
-          <div class="team-line"><span>${escapeHtml(teamLabel(m.aId))}</span><input class="score-input" type="number" min="0" data-role="scoreA"></div>
+          <div class="team-line"><span>${escapeHtml(teamLabel(cat, m.aId))}</span><input class="score-input" type="number" min="0" data-role="scoreA"></div>
           <div class="divider"></div>
-          <div class="team-line"><span>${escapeHtml(teamLabel(m.bId))}</span><input class="score-input" type="number" min="0" data-role="scoreB"></div>
-          <button class="btn small save-btn" data-action="save-score" data-round="${rIdx}" data-match="${m.id}">Simpan Skor</button>
+          <div class="team-line"><span>${escapeHtml(teamLabel(cat, m.bId))}</span><input class="score-input" type="number" min="0" data-role="scoreB"></div>
+          <button class="btn small save-btn" data-action="save-score" data-cat="${cat}" data-round="${rIdx}" data-match="${m.id}">Simpan Skor</button>
         </div>`;
       }
       return `<div class="bmatch">
-        <div class="team-line ${aWin?'winner':''}"><span>${escapeHtml(teamLabel(m.aId))}</span><span>${m.scoreA}</span></div>
+        <div class="team-line ${aWin?'winner':''}"><span>${escapeHtml(teamLabel(cat, m.aId))}</span><span>${m.scoreA}</span></div>
         <div class="divider"></div>
-        <div class="team-line ${bWin?'winner':''}"><span>${escapeHtml(teamLabel(m.bId))}</span><span>${m.scoreB}</span></div>
+        <div class="team-line ${bWin?'winner':''}"><span>${escapeHtml(teamLabel(cat, m.bId))}</span><span>${m.scoreB}</span></div>
       </div>`;
     }).join('');
     return `<div class="round-col"><div class="round-title">${roundLabel(rIdx, rounds.length)}</div>${matches}</div>`;
   }).join('');
 
   const editSection = `
-    <div class="card" style="display: none;">
+    <div class="card">
       <h2>Perbaiki Nama Tim</h2>
       <div class="muted">Salah tulis nama pas di-acak? Perbaiki di sini tanpa perlu acak ulang semua tim.</div>
-      ${state.teams.map(t=>`
+      ${state[cat].teams.map(t=>`
         <div class="edit-name-row">
-          <input type="text" value="${escapeHtml(t.p1)}" data-team="${t.id}" data-slot="p1">
+          <input type="text" value="${escapeHtml(t.p1)}" data-cat="${cat}" data-team="${t.id}" data-slot="p1">
           <span style="align-self:center;">&amp;</span>
-          <input type="text" value="${escapeHtml(t.p2)}" data-team="${t.id}" data-slot="p2">
-          <button class="btn small ghost" data-action="save-team-name" data-team="${t.id}">Simpan</button>
+          <input type="text" value="${escapeHtml(t.p2)}" data-cat="${cat}" data-team="${t.id}" data-slot="p2">
+          <button class="btn small ghost" data-action="save-team-name" data-cat="${cat}" data-team="${t.id}">Simpan</button>
         </div>
       `).join('')}
     </div>
@@ -467,9 +539,9 @@ function renderBracket(){
   container.innerHTML = championHtml + `<div class="card"><h2>Bracket</h2><div class="bracket-scroll"><div class="bracket">${cols}</div></div></div>` + editSection;
 }
 
-function renderAll(){
-  renderTeamsResult();
-  renderBracket();
+function renderAll(cat){
+  renderTeamsResult(cat);
+  renderBracket(cat);
 }
 
 /* ============================================================
@@ -490,30 +562,32 @@ function setupRealtimeListeners(){
     }
   });
 
-  db.ref('roster').on('value', snap=>{
-    const val = snap.val();
-    if(val === null){
-      db.ref('roster').set(DEFAULT_ROSTER); // seed pertama kali
-      return;
-    }
-    state.roster = val;
-    renderRoster();
-  });
+  CATEGORIES.forEach(cat=>{
+    db.ref(cat+'/roster').on('value', snap=>{
+      const val = snap.val();
+      if(val === null){
+        db.ref(cat+'/roster').set(DEFAULT_ROSTERS[cat]); // seed pertama kali
+        return;
+      }
+      state[cat].roster = val;
+      renderRoster(cat);
+    });
 
-  db.ref('teams').on('value', snap=>{
-    state.teams = snap.val() || [];
-    renderTeamsResult();
-    renderBracket();
-  });
+    db.ref(cat+'/teams').on('value', snap=>{
+      state[cat].teams = snap.val() || [];
+      renderTeamsResult(cat);
+      renderBracket(cat);
+    });
 
-  db.ref('leftover').on('value', snap=>{
-    state.leftover = snap.val() || null;
-    renderTeamsResult();
-  });
+    db.ref(cat+'/leftover').on('value', snap=>{
+      state[cat].leftover = snap.val() || null;
+      renderTeamsResult(cat);
+    });
 
-  db.ref('bracket').on('value', snap=>{
-    state.bracket = snap.val() || [];
-    renderBracket();
+    db.ref(cat+'/bracket').on('value', snap=>{
+      state[cat].bracket = snap.val() || [];
+      renderBracket(cat);
+    });
   });
 }
 
@@ -521,37 +595,44 @@ function setupRealtimeListeners(){
    EVENTS
 ============================================================ */
 document.addEventListener('DOMContentLoaded', async ()=>{
+  document.querySelectorAll('.cat-tab-btn').forEach(b=>{
+    b.addEventListener('click', ()=> switchCatTab(b.dataset.cat));
+  });
+
   if(!firebaseReady){
     document.getElementById('configWarning').style.display = 'block';
     document.getElementById('connDot').className = 'conn-dot off';
     document.getElementById('connText').textContent = 'Firebase belum di-setup';
-    renderRoster();
-    renderAll();
+    CATEGORIES.forEach(cat=>{ renderRoster(cat); renderAll(cat); });
   } else {
     setupRealtimeListeners();
   }
 
-  document.getElementById('saveRosterBtn').addEventListener('click', saveRoster);
-  document.getElementById('shuffleBtn').addEventListener('click', shuffleTeamsAndBuildBracket);
-  document.getElementById('resetBracketBtn').addEventListener('click', resetBracket);
-  document.getElementById('resetScoresBtn').addEventListener('click', resetScoresOnly);
+  CATEGORIES.forEach(cat=>{
+    document.getElementById('saveRosterBtn-'+cat).addEventListener('click', ()=> saveRoster(cat));
+    document.getElementById('shuffleBtn-'+cat).addEventListener('click', ()=> shuffleTeamsAndBuildBracket(cat));
+    document.getElementById('resetBracketBtn-'+cat).addEventListener('click', ()=> resetBracket(cat));
+    document.getElementById('resetScoresBtn-'+cat).addEventListener('click', ()=> resetScoresOnly(cat));
+  });
 
   document.addEventListener('click', async (e)=>{
     const saveScore = e.target.closest('[data-action="save-score"]');
     if(saveScore){
+      const cat = saveScore.dataset.cat;
       const box = saveScore.closest('.bmatch');
       const sA = parseInt(box.querySelector('[data-role="scoreA"]').value, 10);
       const sB = parseInt(box.querySelector('[data-role="scoreB"]').value, 10);
       if(isNaN(sA) || isNaN(sB)){ alert('Isi kedua skor dulu.'); return; }
-      await saveMatchScore(parseInt(saveScore.dataset.round,10), saveScore.dataset.match, sA, sB);
+      await saveMatchScore(cat, parseInt(saveScore.dataset.round,10), saveScore.dataset.match, sA, sB);
       return;
     }
     const saveTeamName = e.target.closest('[data-action="save-team-name"]');
     if(saveTeamName){
+      const cat = saveTeamName.dataset.cat;
       const teamId = saveTeamName.dataset.team;
-      const p1 = document.querySelector(`input[data-team="${teamId}"][data-slot="p1"]`).value;
-      const p2 = document.querySelector(`input[data-team="${teamId}"][data-slot="p2"]`).value;
-      await renameTeam(teamId, p1, p2);
+      const p1 = document.querySelector(`input[data-cat="${cat}"][data-team="${teamId}"][data-slot="p1"]`).value;
+      const p2 = document.querySelector(`input[data-cat="${cat}"][data-team="${teamId}"][data-slot="p2"]`).value;
+      await renameTeam(cat, teamId, p1, p2);
       return;
     }
   });
