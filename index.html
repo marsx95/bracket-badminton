@@ -71,7 +71,7 @@
   .team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:14px;}
   .team-chip{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;font-size:13.5px;}
   .team-chip b{color:var(--gold-dark);}
-  .leftover{border:1.5px dashed var(--red);background:#FFF3EE;border-radius:12px;padding:10px 12px;margin-top:10px;font-size:13.5px;}
+  .team-chip.solo{border-style:dashed;}
 
   .bracket-scroll{overflow-x:auto;padding-bottom:10px;}
   .bracket{display:flex;gap:36px;align-items:stretch;min-width:min-content;padding:6px 4px;}
@@ -129,7 +129,7 @@
 
     <div class="card">
       <h2>Acak Jadi Tim Putra</h2>
-      <div class="muted">Ambil semua nama di daftar pemain putra, acak, pasangkan 2-2 jadi tim, terus langsung susun bracket sistem gugur.</div>
+      <div class="muted">Ambil semua nama di daftar pemain putra, acak, pasangkan 2-2 jadi tim, terus langsung susun bracket sistem gugur. Kalau jumlahnya ganjil, 1 orang terakhir tetap ikut sebagai tim sendiri (main solo).</div>
       <button class="btn gold" id="shuffleBtn-putra">🎲 Acak Jadi Tim &amp; Buat Bracket</button>
       <div id="teamsResult-putra"></div>
     </div>
@@ -145,7 +145,7 @@
         </div>
         <div>
           <div class="muted" style="margin-bottom:8px;">Hapus tim &amp; bracket sepenuhnya (daftar pemain gak kehapus).</div>
-          <button class="btn ghost" id="resetBracketBtn-putra" style="display:none;">Reset Tim &amp; Bracket</button>
+          <button class="btn ghost" id="resetBracketBtn-putra">Reset Tim &amp; Bracket</button>
         </div>
       </div>
     </div>
@@ -165,8 +165,8 @@
 
     <div class="card">
       <h2>Acak Jadi Tim Putri</h2>
-      <div class="muted">Ambil semua nama di daftar pemain putri, acak, pasangkan 2-2 jadi tim, terus langsung susun bracket sistem gugur.</div>
-      <button class="btn gold" id="shuffleBtn-putri" style="display:none;">🎲 Acak Jadi Tim &amp; Buat Bracket</button>
+      <div class="muted">Ambil semua nama di daftar pemain putri, acak, pasangkan 2-2 jadi tim, terus langsung susun bracket sistem gugur. Kalau jumlahnya ganjil, 1 orang terakhir tetap ikut sebagai tim sendiri (main solo).</div>
+      <button class="btn gold" id="shuffleBtn-putri">🎲 Acak Jadi Tim &amp; Buat Bracket</button>
       <div id="teamsResult-putri"></div>
     </div>
 
@@ -181,7 +181,7 @@
         </div>
         <div>
           <div class="muted" style="margin-bottom:8px;">Hapus tim &amp; bracket sepenuhnya (daftar pemain gak kehapus).</div>
-          <button class="btn ghost" id="resetBracketBtn-putri" style="display:none;">Reset Tim &amp; Bracket</button>
+          <button class="btn ghost" id="resetBracketBtn-putri">Reset Tim &amp; Bracket</button>
         </div>
       </div>
     </div>
@@ -236,8 +236,8 @@ const DEFAULT_ROSTERS = {
 const CATEGORIES = ['putra','putri'];
 
 let state = {
-  putra: { roster: DEFAULT_ROSTERS.putra.slice(), teams: [], leftover: null, bracket: [] },
-  putri: { roster: DEFAULT_ROSTERS.putri.slice(), teams: [], leftover: null, bracket: [] }
+  putra: { roster: DEFAULT_ROSTERS.putra.slice(), teams: [], bracket: [] },
+  putri: { roster: DEFAULT_ROSTERS.putri.slice(), teams: [], bracket: [] }
 };
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
@@ -351,31 +351,29 @@ function buildBracketFromTeams(teams){
 
 async function shuffleTeamsAndBuildBracket(cat){
   const names = state[cat].roster.map(n=>n.trim()).filter(Boolean);
-  if(names.length < 4){ alert('Minimal 4 pemain (2 tim) buat bikin bracket.'); return; }
+  if(names.length < 2){ alert('Minimal 2 pemain buat bikin bracket.'); return; }
   if(state[cat].bracket.length > 0){
     if(!confirm('Ini bakal bikin ulang tim & bracket dari awal, skor yang udah diisi bakal hilang. Lanjut?')) return;
   }
 
   const shuffled = shuffleArr(names);
-  let leftover = null;
-  let pairPool = shuffled;
-  if(pairPool.length % 2 !== 0){
-    leftover = pairPool[pairPool.length-1];
-    pairPool = pairPool.slice(0, -1);
-  }
 
+  // Pasangkan 2-2. Kalau jumlahnya ganjil, orang terakhir tetap dimasukin
+  // sebagai 1 tim sendiri (main solo) -- gak ada yang disisihkan.
   const teams = [];
-  for(let i=0;i<pairPool.length;i+=2){
-    teams.push({ id: uid(), p1: pairPool[i], p2: pairPool[i+1] });
+  for(let i=0;i<shuffled.length;i+=2){
+    if(i+1 < shuffled.length){
+      teams.push({ id: uid(), p1: shuffled[i], p2: shuffled[i+1] });
+    } else {
+      teams.push({ id: uid(), p1: shuffled[i], p2: null });
+    }
   }
 
   const rounds = buildBracketFromTeams(teams);
 
   state[cat].teams = teams;
-  state[cat].leftover = leftover;
   state[cat].bracket = rounds;
   await fbSet(cat+'/teams', teams);
-  await fbSet(cat+'/leftover', leftover);
   await fbSet(cat+'/bracket', rounds);
   renderAll(cat);
 }
@@ -412,16 +410,15 @@ async function renameTeam(cat, teamId, p1, p2){
   const t = state[cat].teams.find(x=>x.id===teamId);
   if(!t) return;
   t.p1 = p1.trim() || t.p1;
-  t.p2 = p2.trim() || t.p2;
+  t.p2 = p2.trim() || null;
   await fbSet(cat+'/teams', state[cat].teams);
   renderAll(cat);
 }
 
 async function resetBracket(cat){
   if(!confirm('Hapus semua tim & bracket? Daftar pemain gak akan kehapus.')) return;
-  state[cat].teams = []; state[cat].leftover = null; state[cat].bracket = [];
+  state[cat].teams = []; state[cat].bracket = [];
   await fbSet(cat+'/teams', []);
-  await fbSet(cat+'/leftover', null);
   await fbSet(cat+'/bracket', []);
   renderAll(cat);
 }
@@ -442,7 +439,8 @@ function teamById(cat, id){ return state[cat].teams.find(t=>t.id===id); }
 function teamLabel(cat, id){
   if(!id) return 'BYE';
   const t = teamById(cat, id);
-  return t ? (t.p1 + ' & ' + t.p2) : '(tim dihapus)';
+  if(!t) return '(tim dihapus)';
+  return t.p2 ? (t.p1 + ' & ' + t.p2) : t.p1 + ' (solo)';
 }
 function escapeHtml(str){
   return String(str ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -452,11 +450,8 @@ function renderTeamsResult(cat){
   const el = document.getElementById('teamsResult-'+cat);
   if(state[cat].teams.length === 0){ el.innerHTML=''; return; }
   let html = '<div class="team-grid">' + state[cat].teams.map((t,i)=>`
-    <div class="team-chip"><b>Tim ${i+1}:</b> ${escapeHtml(t.p1)} &amp; ${escapeHtml(t.p2)}</div>
+    <div class="team-chip ${t.p2 ? '' : 'solo'}"><b>Tim ${i+1}:</b> ${escapeHtml(t.p1)}${t.p2 ? ' &amp; ' + escapeHtml(t.p2) : ' <em>(main solo)</em>'}</div>
   `).join('') + '</div>';
-  if(state[cat].leftover){
-    html += `<div class="leftover">⚠️ Jumlah pemain ganjil — <b>${escapeHtml(state[cat].leftover)}</b> belum kebagian pasangan. Tambah 1 nama lagi terus acak ulang, atau pasangkan manual.</div>`;
-  }
   el.innerHTML = html;
 }
 
@@ -522,14 +517,14 @@ function renderBracket(cat){
   }).join('');
 
   const editSection = `
-    <div class="card" style="display:none;">
+    <div class="card">
       <h2>Perbaiki Nama Tim</h2>
-      <div class="muted">Salah tulis nama pas di-acak? Perbaiki di sini tanpa perlu acak ulang semua tim.</div>
+      <div class="muted">Salah tulis nama pas di-acak, atau mau pasangin tim solo dengan partner? Kosongkan kolom kedua buat main solo, atau isi buat bikin pasangan.</div>
       ${state[cat].teams.map(t=>`
         <div class="edit-name-row">
           <input type="text" value="${escapeHtml(t.p1)}" data-cat="${cat}" data-team="${t.id}" data-slot="p1">
           <span style="align-self:center;">&amp;</span>
-          <input type="text" value="${escapeHtml(t.p2)}" data-cat="${cat}" data-team="${t.id}" data-slot="p2">
+          <input type="text" value="${escapeHtml(t.p2)}" placeholder="(solo, kosongkan biar sendiri)" data-cat="${cat}" data-team="${t.id}" data-slot="p2">
           <button class="btn small ghost" data-action="save-team-name" data-cat="${cat}" data-team="${t.id}">Simpan</button>
         </div>
       `).join('')}
@@ -577,11 +572,6 @@ function setupRealtimeListeners(){
       state[cat].teams = snap.val() || [];
       renderTeamsResult(cat);
       renderBracket(cat);
-    });
-
-    db.ref(cat+'/leftover').on('value', snap=>{
-      state[cat].leftover = snap.val() || null;
-      renderTeamsResult(cat);
     });
 
     db.ref(cat+'/bracket').on('value', snap=>{
